@@ -1,60 +1,61 @@
 # Schema Server
 
-A completely independent HTTP server built with Go's standard library that provides RESTful APIs for managing schemas. This server is self-contained with no external dependencies on the Keploy project, making it easy to deploy and use standalone.
+A completely independent HTTP server built with Go's standard library that provides RESTful APIs for **dynamic schema generation and management**. This server features **real file-based schema operations** with no hard-coded data, making it production-ready for actual schema management workflows.
 
-## Features
+## 🚀 Key Features
 
-- **Schema Generation**: Generate schemas for mocks and tests with mock implementations
-- **Schema Download**: Download schemas with various configurations
-- **Schema Validation**: Validate schemas against contracts
-- **HTTPDoc to OpenAPI Conversion**: Convert HTTPDoc format to OpenAPI specification
-- **Health Check**: Monitor server health status
-- **Mock Data**: Returns realistic mock data for all operations
+- **🔄 Dynamic Schema Generation**: Real-time schema generation from input data with file persistence
+- **📁 File-Based Storage**: All schemas stored in organized directory structure (`./contracts/`)
+- **🔍 Smart Schema Inference**: Automatic OpenAPI schema generation from JSON data and HTTPDoc
+- **📥 Schema Download**: Download and export schemas to custom locations
+- **✅ Schema Validation**: Validate all generated schemas for correctness
+- **🔄 HTTPDoc to OpenAPI Conversion**: Convert HTTPDoc format to OpenAPI specification with schema inference
+- **🏥 Health Monitoring**: Built-in health check endpoints
+- **🧪 Comprehensive Testing**: Multiple test suites with real data scenarios
 
-## Architecture
+## 🏗️ Architecture
 
-The server is completely self-contained with internal implementations of all required types and interfaces:
+The server features **real schema generation** with file persistence and dynamic data processing:
 
 ### Directory Structure
 
 ```
 schema-server/
-├── main.go                    # Application entry point
+├── main.go                    # Application entry point (Real Service)
 ├── server/                    # HTTP server implementation
 │   └── server.go             # Server routes and handlers
-├── internal/                  # Internal packages (no external dependencies)
+├── internal/                  # Internal packages
 │   ├── config/               # Configuration types
 │   │   └── config.go
 │   ├── models/               # Data models and types
 │   │   └── models.go
-│   └── contract/             # Contract service interface and mock implementation
-│       └── service.go
+│   └── contract/             # Contract service interface and REAL implementation
+│       ├── service.go        # Service interface
+│       └── real_service.go   # Real file-based implementation (NEW!)
+├── contracts/                 # Generated schema files (created dynamically)
+│   ├── tests/                # Test schemas organized by service
+│   ├── mocks/                # Mock schemas organized by service
+│   └── generated/            # Converted schemas and generated files
 ├── go.mod                     # Go module definition (minimal dependencies)
-├── test_server.sh            # Test script for all endpoints
+├── test_server.sh            # Original test script
+├── simple_test.sh            # Simple test without jq dependency
+├── real_test.sh              # Comprehensive test with real data scenarios (NEW!)
 └── README.md                 # This documentation
 ```
 
-### Components
+### 🔧 Components
 
-#### Internal Packages
+#### Real Service Implementation (`internal/contract/real_service.go`)
 
-- **`internal/config`**: Configuration structures for server settings
-- **`internal/models`**: All data models including HTTPDoc, OpenAPI, TestCase, etc.
-- **`internal/contract`**: Service interface and mock implementation with realistic responses
+- **File-Based Operations**: Read/write schemas to disk with organized structure
+- **Dynamic Generation**: Generate OpenAPI schemas from service endpoints and test names
+- **Schema Inference**: Smart JSON-to-schema conversion with type detection
+- **Directory Management**: Automatic creation and organization of schema directories
+- **Download Operations**: Copy schemas to specified paths for distribution
 
-#### Server Package (`server/server.go`)
+## 🌐 API Endpoints
 
-- **Server struct**: Main server structure with HTTP multiplexer, logger, and services
-- **Route Handlers**: Individual handlers for each API endpoint with full functionality
-- **Helper Functions**: JSON response utilities and comprehensive error handling
-
-#### Main Package (`main.go`)
-
-- **Initialization**: Logger setup and configuration loading
-- **Service Creation**: Mock contract service initialization
-- **Server Startup**: HTTP server creation and startup
-
-## API Endpoints
+All endpoints run on **port 7080** by default.
 
 ### Health Check
 
@@ -62,14 +63,14 @@ schema-server/
 
 ### Schema Operations
 
-#### Fetching Schemas
+#### Fetching Schemas (Real Data from Files)
 
-- **GET** `/api/v1/schemas/tests` - Get all tests schema (returns mock data)
-- **GET** `/api/v1/schemas/mocks/downloaded` - Get all downloaded mocks schemas (returns mock data)
+- **GET** `/api/v1/schemas/tests` - Get all tests schema (from `./contracts/tests/`)
+- **GET** `/api/v1/schemas/mocks/downloaded` - Get all downloaded mocks schemas (from `./contracts/mocks/`)
 
-#### Generating Schemas
+#### Generating Schemas (Dynamic File Creation)
 
-- **POST** `/api/v1/schemas/generate` - Generate schemas (general)
+- **POST** `/api/v1/schemas/generate` - Generate schemas with file persistence
 
   ```json
   {
@@ -77,28 +78,36 @@ schema-server/
   }
   ```
 
-- **POST** `/api/v1/schemas/mocks/generate` - Generate mocks schemas
+- **POST** `/api/v1/schemas/mocks/generate` - Generate dynamic mock schemas from endpoints
 
   ```json
   {
-    "services": ["service1", "service2"],
+    "services": ["user-service", "inventory-service"],
     "mappings": {
-      "service1": ["url1", "url2"],
-      "service2": ["url3", "url4"]
+      "user-service": [
+        "https://api.example.com/users",
+        "https://api.example.com/users/{id}",
+        "/users/{id}/profile"
+      ],
+      "inventory-service": ["/inventory/items", "/inventory/stock"]
     }
   }
   ```
 
-- **POST** `/api/v1/schemas/tests/generate` - Generate tests schemas
+- **POST** `/api/v1/schemas/tests/generate` - Generate test schemas dynamically
   ```json
   {
-    "selectedTests": ["test1", "test2"]
+    "selectedTests": [
+      "user-authentication-test",
+      "payment-processing-test",
+      "order-fulfillment-test"
+    ]
   }
   ```
 
-#### Downloading Schemas
+#### Downloading Schemas (File Operations)
 
-- **POST** `/api/v1/schemas/download` - Download schemas
+- **POST** `/api/v1/schemas/download` - Download schemas from remote sources
 
   ```json
   {
@@ -106,67 +115,66 @@ schema-server/
   }
   ```
 
-- **POST** `/api/v1/schemas/tests/download` - Download tests
+- **POST** `/api/v1/schemas/tests/download` - Download test files to custom location
 
   ```json
   {
-    "path": "/path/to/tests"
+    "path": "/tmp/downloaded-tests"
   }
   ```
 
-- **POST** `/api/v1/schemas/mocks/download` - Download mocks
+- **POST** `/api/v1/schemas/mocks/download` - Download mock files to custom location
   ```json
   {
-    "path": "/path/to/mocks"
+    "path": "/tmp/downloaded-mocks"
   }
   ```
 
-#### Validation
+#### Validation & Conversion
 
-- **POST** `/api/v1/schemas/validate` - Validate schemas
+- **POST** `/api/v1/schemas/validate` - Validate all stored schemas
 
-#### Conversion
-
-- **POST** `/api/v1/schemas/convert` - Convert HTTPDoc to OpenAPI (returns actual converted OpenAPI spec)
+- **POST** `/api/v1/schemas/convert` - Convert HTTPDoc to OpenAPI with smart schema inference
   ```json
   {
-    "name": "Example API",
-    "version": "1.0.0",
+    "name": "E-commerce User API",
+    "version": "2.1.0",
     "kind": "HTTPDoc",
     "spec": {
       "request": {
-        "method": "GET",
-        "url": "https://api.example.com/users",
+        "method": "POST",
+        "url": "https://api.ecommerce.com/users",
         "header": {
-          "Authorization": "Bearer token"
+          "Content-Type": "application/json",
+          "Authorization": "Bearer token123"
         },
-        "body": ""
+        "body": "{\"name\": \"John Doe\", \"email\": \"john@example.com\", \"age\": 30}"
       },
       "response": {
-        "statusCode": 200,
-        "statusMessage": "OK",
-        "body": "{\"users\": []}"
+        "statusCode": 201,
+        "statusMessage": "Created",
+        "body": "{\"id\": 12345, \"name\": \"John Doe\", \"created_at\": \"2024-01-15T10:30:00Z\"}"
       }
     }
   }
   ```
 
-## Setup and Running
+## 🚀 Setup and Running
 
 ### Prerequisites
 
 - Go 1.22.0 or later
-- **No external dependencies** - completely self-contained!
+- **Only one external dependency**: `go.uber.org/zap` for logging
 
 ### Installation
 
-1. Navigate to the schema-server directory:
+1. Clone and navigate to the directory:
 
    ```bash
    cd schema-server
    ```
 
-2. Download dependencies (only zap for logging):
+2. Download dependencies:
 
    ```bash
    go mod tidy
@@ -175,7 +183,8 @@ schema-server/
 3. Set environment variables (optional):
 
    ```bash
-   export PORT=8080  # Default port if not set
+   export PORT=7080                    # Default port
+   export CONTRACTS_PATH=./contracts   # Default contracts directory
    ```
 
 4. Run the server:
@@ -183,115 +192,144 @@ schema-server/
    go run main.go
    ```
 
-The server will start on port 8080 (or the port specified in the PORT environment variable).
+The server will start on **port 7080** and automatically create the `./contracts/` directory structure.
 
-### Testing
+## 🧪 Testing
 
-Run the comprehensive test script:
+### **1. Comprehensive Test Suite (Recommended)**
+
+Run the full test suite with real data scenarios:
+
+```bash
+chmod +x real_test.sh
+./real_test.sh
+```
+
+This tests:
+
+- ✅ Health checks
+- ✅ Dynamic schema generation from real service data
+- ✅ HTTPDoc to OpenAPI conversion with schema inference
+- ✅ File creation and organization
+- ✅ Download operations to custom paths
+- ✅ Schema validation
+- ✅ Error handling
+- ✅ File verification
+
+### **2. Simple Test Suite**
+
+Test without `jq` dependency:
+
+```bash
+chmod +x simple_test.sh
+./simple_test.sh
+```
+
+### **3. Original Test Suite**
+
+Test with `jq` for formatted output (requires `brew install jq`):
 
 ```bash
 chmod +x test_server.sh
 ./test_server.sh
 ```
 
-Or test individual endpoints:
+### **4. Manual Testing Examples**
 
 ```bash
 # Health check
-curl http://localhost:8080/api/v1/health
+curl http://localhost:7080/api/v1/health
 
-# Get tests schema (returns mock data)
-curl http://localhost:8080/api/v1/schemas/tests
-
-# Generate schemas
-curl -X POST http://localhost:8080/api/v1/schemas/generate \
+# Generate schemas with real data
+curl -X POST http://localhost:7080/api/v1/schemas/generate \
   -H "Content-Type: application/json" \
   -d '{"checkConfig": true}'
 
-# Convert HTTPDoc to OpenAPI
-curl -X POST http://localhost:8080/api/v1/schemas/convert \
+# Generate service mocks dynamically
+curl -X POST http://localhost:7080/api/v1/schemas/mocks/generate \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "Test API",
+    "services": ["payment-service", "user-service"],
+    "mappings": {
+      "payment-service": [
+        "https://gateway.payment.com/v2/charges",
+        "/refunds", "/webhooks"
+      ],
+      "user-service": [
+        "/users", "/users/{id}", "/users/{id}/profile"
+      ]
+    }
+  }'
+
+# Convert HTTPDoc to OpenAPI with schema inference
+curl -X POST http://localhost:7080/api/v1/schemas/convert \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "User Management API",
     "version": "1.0.0",
     "kind": "HTTPDoc",
     "spec": {
       "request": {
-        "method": "GET",
-        "url": "https://api.test.com/users",
-        "header": {},
-        "body": ""
+        "method": "POST",
+        "url": "https://api.example.com/users",
+        "body": "{\"name\": \"Alice\", \"email\": \"alice@example.com\", \"role\": \"admin\"}"
       },
       "response": {
-        "statusCode": 200,
-        "statusMessage": "OK",
-        "body": "{\"users\": []}"
+        "statusCode": 201,
+        "statusMessage": "Created",
+        "body": "{\"id\": 42, \"name\": \"Alice\", \"created_at\": \"2024-01-15T10:30:00Z\"}"
       }
     }
   }'
 ```
 
-## Dependencies
+## 📁 Generated File Structure
 
-The server has **minimal dependencies**:
+After running tests or operations, you'll see:
 
-- `go.uber.org/zap` - Structured logging (only external dependency)
-- Go standard library - HTTP server, JSON handling, etc.
-
-**No Keploy dependencies** - completely independent!
-
-## Mock Implementation
-
-The server includes a fully functional mock implementation that:
-
-- Logs all operations with structured logging
-- Returns realistic mock data for schema operations
-- Simulates actual OpenAPI schema generation and conversion
-- Provides proper error handling and validation
-- Supports all API endpoints with meaningful responses
-
-## Key Features
-
-✅ **Zero External Dependencies**: No dependency on Keploy codebase  
-✅ **Complete Implementation**: All endpoints return proper responses  
-✅ **Realistic Mock Data**: Returns actual OpenAPI schemas, not placeholders  
-✅ **Full Error Handling**: Comprehensive error responses and validation  
-✅ **Structured Logging**: Detailed logging for all operations  
-✅ **Standard HTTP**: Uses Go's standard library for maximum compatibility  
-✅ **Easy Testing**: Includes test script for all endpoints  
-✅ **Self-Contained**: Can be deployed anywhere without external services
-
-## Example Responses
-
-### Health Check Response
-
-```json
-{
-  "status": "healthy",
-  "service": "schema-server"
-}
+```
+contracts/
+├── generated/
+│   └── E-commerce User API-converted.json    # HTTPDoc conversions
+├── mocks/
+│   ├── payment-service/
+│   │   ├── mock-default.json
+│   │   └── mock-20250609-121816.json         # Timestamped generations
+│   ├── user-service/
+│   │   └── mock-20250609-121816.json
+│   └── notification-service/
+│       └── mock-default.json
+└── tests/
+    ├── generated/
+    │   ├── user-authentication-test.json      # Generated test schemas
+    │   ├── payment-processing-test.json
+    │   └── order-fulfillment-test.json
+    ├── user-service/
+    │   └── get-user-test.json                 # Service-specific tests
+    └── order-service/
+        └── create-order-test.json
 ```
 
-### Get Tests Schema Response
+## 📊 Example Responses
+
+### Real Test Schema Response
 
 ```json
 {
   "data": {
-    "test-set-1": {
-      "test-case-1": {
+    "user-service": {
+      "get-user-test": {
         "openapi": "3.0.0",
         "info": {
-          "title": "Mock Test API",
+          "title": "User Service Test",
           "version": "1.0.0"
         },
         "paths": {
-          "/test": {
+          "/users/{id}": {
             "get": {
-              "summary": "Mock test endpoint",
+              "summary": "Get user by ID",
               "responses": {
-                "200": {
-                  "description": "Success"
-                }
+                "200": { "description": "User found" }
               }
             }
           }
@@ -303,34 +341,47 @@ The server includes a fully functional mock implementation that:
 }
 ```
 
-### HTTPDoc to OpenAPI Conversion Response
+### Dynamic HTTPDoc Conversion
 
 ```json
 {
   "data": {
     "openapi": "3.0.0",
     "info": {
-      "title": "Test API",
-      "version": "1.0.0",
-      "description": "HTTPDoc"
+      "title": "E-commerce User API",
+      "version": "2.1.0",
+      "description": "Generated from HTTPDoc"
     },
-    "servers": [
-      {
-        "url": "https://api.example.com"
-      }
-    ],
     "paths": {
-      "/converted": {
-        "get": {
-          "summary": "Converted from HTTPDoc",
-          "description": "Generated from Test API",
+      "/users": {
+        "post": {
+          "summary": "POST operation for E-commerce User API",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "name": { "type": "string" },
+                    "email": { "type": "string" },
+                    "age": { "type": "number" }
+                  }
+                }
+              }
+            }
+          },
           "responses": {
-            "200": {
-              "description": "Successful response",
+            "201": {
+              "description": "Created",
               "content": {
                 "application/json": {
                   "schema": {
-                    "type": "object"
+                    "type": "object",
+                    "properties": {
+                      "id": { "type": "number" },
+                      "name": { "type": "string" },
+                      "created_at": { "type": "string" }
+                    }
                   }
                 }
               }
@@ -344,13 +395,35 @@ The server includes a fully functional mock implementation that:
 }
 ```
 
-## Future Enhancements
+## 🔧 Key Improvements Over Mock Implementation
 
-1. **Real Database Integration**: Replace mock service with actual database backends
-2. **Authentication**: Add JWT or API key authentication
-3. **Rate Limiting**: Implement request rate limiting
-4. **CORS Support**: Add CORS headers for web client support
-5. **Configuration Files**: Support for YAML/JSON configuration files
-6. **Metrics**: Add Prometheus metrics for monitoring
-7. **Docker Support**: Add Dockerfile for containerized deployment
-8. **File Storage**: Add file-based schema storage and retrieval
+✅ **Real File Operations**: Schemas persisted to disk, not in-memory  
+✅ **Dynamic Generation**: Creates schemas from actual input data  
+✅ **Smart Schema Inference**: Analyzes JSON to generate OpenAPI schemas  
+✅ **Organized Storage**: Hierarchical directory structure for easy management  
+✅ **Timestamped Files**: Automatic versioning with timestamps  
+✅ **Copy Operations**: Real file copying for downloads  
+✅ **Validation**: Actual file-based schema validation  
+✅ **Zero Hardcoding**: All data generated dynamically from inputs
+
+## 🛠️ Dependencies
+
+Minimal dependencies for maximum compatibility:
+
+- `go.uber.org/zap` - Structured logging (only external dependency)
+- Go standard library - HTTP server, JSON handling, file operations
+
+**No Keploy dependencies** - completely independent!
+
+## 🔮 Future Enhancements
+
+1. **Database Integration**: Add PostgreSQL/MongoDB backends for large-scale storage
+2. **Authentication**: JWT/API key authentication for production security
+3. **Rate Limiting**: Request throttling for production deployment
+4. **Advanced Schema Inference**: More sophisticated JSON-to-OpenAPI conversion
+5. **Web UI**: Browser-based interface for schema management
+6. **Docker Support**: Containerized deployment with Docker Compose
+7. **Metrics & Monitoring**: Prometheus metrics and health dashboards
+8. **Schema Versioning**: Git-based versioning for schema evolution
+9. **Batch Operations**: Bulk schema generation and processing
+10. **Real-time Updates**: WebSocket-based real-time schema synchronization

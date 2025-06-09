@@ -1,0 +1,19 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Notification Service Mock",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/notifications": {
+      "post": {
+        "summary": "Send notification",
+        "responses": {
+          "200": {
+            "description": "Notification sent"
+          }
+        }
+      }
+    }
+  }
+}

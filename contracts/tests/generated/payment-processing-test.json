@@ -1,0 +1,26 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Test: payment-processing-test",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/test/payment-processing-test": {
+      "get": {
+        "summary": "Test operation for payment-processing-test",
+        "responses": {
+          "200": {
+            "description": "Test success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
