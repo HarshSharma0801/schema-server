@@ -1,0 +1,346 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "E-commerce API",
+    "description": "Production e-commerce API for online store",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/orders": {
+      "post": {
+        "summary": "Create a new order",
+        "operationId": "createOrder",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": ""
+              },
+              "example": {
+                "customer_id": "cust-456",
+                "items": [
+                  {
+                    "product_id": "prod-123",
+                    "quantity": 2
+                  },
+                  {
+                    "product_id": "prod-124",
+                    "quantity": 1
+                  }
+                ],
+                "shipping_address": {
+                  "city": "San Francisco",
+                  "state": "CA",
+                  "street": "123 Main St",
+                  "zip": "94105"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Order created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": ""
+                },
+                "example": {
+                  "created_at": "2023-12-01T10:30:00Z",
+                  "id": "ord-789",
+                  "status": "pending",
+                  "total": 699.97
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/products": {
+      "get": {
+        "summary": "Get all products",
+        "operationId": "getProducts",
+        "parameters": [
+          {
+            "name": "category",
+            "in": "query",
+            "description": "Filter by product category",
+            "schema": {
+              "type": "string"
+            },
+            "example": "electronics"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Number of products to return",
+            "schema": {
+              "type": "integer"
+            },
+            "example": 20
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of products",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "page": {
+                      "type": "integer"
+                    },
+                    "products": {
+                      "items": {
+                        "$ref": "#/components/schemas/Product"
+                      },
+                      "type": "array"
+                    },
+                    "total": {
+                      "type": "integer"
+                    }
+                  }
+                },
+                "example": {
+                  "page": 1,
+                  "products": [
+                    {
+                      "category": "electronics",
+                      "id": "prod-123",
+                      "in_stock": true,
+                      "name": "Wireless Headphones",
+                      "price": 199.99
+                    }
+                  ],
+                  "total": 150
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": ""
+                },
+                "example": {
+                  "code": "INVALID_CATEGORY",
+                  "message": "Invalid category specified"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new product",
+        "operationId": "createProduct",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": ""
+              },
+              "example": {
+                "category": "electronics",
+                "description": "Advanced fitness tracking smartwatch",
+                "name": "Smart Watch",
+                "price": 299.99
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Product created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": ""
+                },
+                "example": {
+                  "category": "electronics",
+                  "id": "prod-124",
+                  "in_stock": true,
+                  "name": "Smart Watch",
+                  "price": 299.99
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Address": {
+        "properties": {
+          "city": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "street": {
+            "type": "string"
+          },
+          "zip": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "street",
+          "city",
+          "state",
+          "zip"
+        ],
+        "type": "object"
+      },
+      "Error": {
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "type": "object"
+      },
+      "Order": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "processing",
+              "shipped",
+              "delivered"
+            ],
+            "type": "string"
+          },
+          "total": {
+            "format": "decimal",
+            "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "OrderCreate": {
+        "properties": {
+          "customer_id": {
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "properties": {
+                "product_id": {
+                  "type": "string"
+                },
+                "quantity": {
+                  "minimum": 1,
+                  "type": "integer"
+                }
+              },
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "shipping_address": {
+            "$ref": "#/components/schemas/Address"
+          }
+        },
+        "required": [
+          "customer_id",
+          "items"
+        ],
+        "type": "object"
+      },
+      "Product": {
+        "properties": {
+          "category": {
+            "enum": [
+              "electronics",
+              "clothing",
+              "home",
+              "books"
+            ],
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "id": {
+            "description": "Unique product identifier",
+            "type": "string"
+          },
+          "in_stock": {
+            "default": true,
+            "type": "boolean"
+          },
+          "name": {
+            "description": "Product name",
+            "type": "string"
+          },
+          "price": {
+            "format": "decimal",
+            "minimum": 0,
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "price",
+          "category"
+        ],
+        "type": "object"
+      },
+      "ProductCreate": {
+        "properties": {
+          "category": {
+            "enum": [
+              "electronics",
+              "clothing",
+              "home",
+              "books"
+            ],
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "price": {
+            "format": "decimal",
+            "minimum": 0,
+            "type": "number"
+          }
+        },
+        "required": [
+          "name",
+          "price",
+          "category"
+        ],
+        "type": "object"
+      }
+    }
+  }
+}

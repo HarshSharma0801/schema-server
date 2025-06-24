@@ -1,49 +1,37 @@
 package main
 
 import (
-	"log"
+	"fmt"
 	"os"
 
-	"schema-server/internal/config"
+	server "schema-server/http"
 	"schema-server/internal/contract"
-	"schema-server/server"
 
 	"go.uber.org/zap"
 )
 
 func main() {
-	// Initialize logger
 	logger, err := zap.NewProduction()
 	if err != nil {
-		log.Fatalf("Failed to initialize logger: %v", err)
+		fmt.Printf("Failed to initialize logger: %v", err)
 	}
 	defer logger.Sync()
 
-	// Load configuration
 	contractsPath := os.Getenv("CONTRACTS_PATH")
 	if contractsPath == "" {
-		contractsPath = "./contracts"
+		contractsPath = "."
 	}
 
-	cfg := &config.Config{
-		Contract: config.Contract{
-			Path: contractsPath,
-		},
-	}
+	service := contract.NewSchemaService(logger, contractsPath)
 
-	// Create real contract service (not mock)
-	contractService := contract.NewRealService(logger, contractsPath)
-
-	// Get port from environment or use default
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "7080"
 	}
 
-	// Create and start the HTTP server
-	httpServer := server.New(logger, contractService, cfg, port)
+	httpServer := server.New(logger, service, port)
 
-	logger.Info("Starting Schema Server with Real Service",
+	logger.Info("Starting Minimal Schema Server",
 		zap.String("port", port),
 		zap.String("contractsPath", contractsPath))
 
