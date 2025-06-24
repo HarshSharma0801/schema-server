@@ -1,0 +1,172 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Banking API",
+    "description": "Core banking system API",
+    "version": "2.0.0"
+  },
+  "paths": {
+    "/accounts": {
+      "get": {
+        "summary": "Get user accounts",
+        "operationId": "getAccounts",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "user-123"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of accounts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "accounts": {
+                      "items": {
+                        "$ref": "#/components/schemas/Account"
+                      },
+                      "type": "array"
+                    }
+                  }
+                },
+                "example": {
+                  "accounts": [
+                    {
+                      "balance": 1250.75,
+                      "currency": "USD",
+                      "id": "acc-456",
+                      "type": "checking"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/transactions": {
+      "post": {
+        "summary": "Create a transaction",
+        "operationId": "createTransaction",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": ""
+              },
+              "example": {
+                "amount": 100,
+                "description": "Payment for services",
+                "from_account": "acc-456",
+                "to_account": "acc-789"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Transaction created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": ""
+                },
+                "example": {
+                  "id": "txn-123",
+                  "status": "completed",
+                  "timestamp": "2023-12-01T15:30:00Z"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Account": {
+        "properties": {
+          "balance": {
+            "format": "decimal",
+            "type": "number"
+          },
+          "currency": {
+            "default": "USD",
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "checking",
+              "savings",
+              "credit"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "balance"
+        ],
+        "type": "object"
+      },
+      "Transaction": {
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "completed",
+              "failed"
+            ],
+            "type": "string"
+          },
+          "timestamp": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "TransactionCreate": {
+        "properties": {
+          "amount": {
+            "format": "decimal",
+            "minimum": 0.01,
+            "type": "number"
+          },
+          "description": {
+            "type": "string"
+          },
+          "from_account": {
+            "type": "string"
+          },
+          "to_account": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "from_account",
+          "to_account",
+          "amount"
+        ],
+        "type": "object"
+      }
+    }
+  }
+}
